@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main   # jis branch se deploy karna hai
+      - main
 
 jobs:
   deploy:
@@ -18,8 +18,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_KEY }}
 
+      - name: Test SSH connection
+        run: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo ✅ Connected!"
+
       - name: Deploy files to EC2
         run: |
           rsync -avz --delete \
+          -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
           --exclude='.git*' \
           ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/mypropertysnagging/
